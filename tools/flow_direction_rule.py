@@ -1,6 +1,3 @@
-from PIL import Image
-
-
 class FlowDirectionRuleMatrix:
     D8 = [[32, 64, 128], [16, 0, 1], [8, 4, 2]]
     D16 = [
@@ -41,7 +38,7 @@ class FlowDirectionRule(FlowDirectionRuleMatrix):
         x_end = len(self.flow_direction_rule_matrix[0]) // 2 + 1
         return range(x_start, x_end)
 
-    def get_downstream_delta_index(self, flow_direction: int) -> tuple[int, int]:
+    def get_downstream_delta_xy(self, flow_direction: int) -> tuple[int, int]:
         y_start = (len(self.flow_direction_rule_matrix) // 2) * -1
         x_start = (len(self.flow_direction_rule_matrix[0]) // 2) * -1
         for y, rule_x in enumerate(self.flow_direction_rule_matrix, y_start):
@@ -49,7 +46,7 @@ class FlowDirectionRule(FlowDirectionRuleMatrix):
                 if rule == flow_direction:
                     return x, y
 
-    def get_flow_direction_from_delta_index(self, dx: int, dy: int) -> int:
+    def get_flow_direction_from_delta_xy(self, dx: int, dy: int) -> int:
         y = dy + (len(self.flow_direction_rule_matrix) // 2)
         x = dx + (len(self.flow_direction_rule_matrix[0]) // 2)
         return self.flow_direction_rule_matrix[y][x]
@@ -63,19 +60,21 @@ class FlowDirectionRule(FlowDirectionRuleMatrix):
     def is_upstream(self, neighbor_flow_direction: int, dx: int, dy: int) -> bool:
         if self.is_center(dx, dy):
             return False
-        neighbor_dx, neighbor_dy = self.get_downstream_delta_index(
-            neighbor_flow_direction
-        )
+        neighbor_dx, neighbor_dy = self.get_downstream_delta_xy(neighbor_flow_direction)
         if (neighbor_dx + dx == 0) and (neighbor_dy + dy == 0):
             return True
         else:
             return False
-
-    def get_array_size_from_Image(self, image: Image) -> tuple[int, int]:
-        return image.height, image.width
 
     def is_out_of_array(self, array_size: tuple[int, int], x: int, y: int) -> bool:
         if (0 <= y < array_size[0]) and (0 <= x < array_size[1]):
             return False
         else:
             return True
+
+    def neighbor_delta_xy_generator(self, include_center=False) -> tuple[int, int]:
+        for dy in self.dy_range:
+            for dx in self.dx_range:
+                if self.is_center(dx, dy) and not include_center:
+                    continue
+                yield dx, dy
