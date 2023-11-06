@@ -27,7 +27,7 @@ def main():
     catchment_area.derive_flow_accumulation()
     catchment_area.set_dam_point_as_mouth(dam_geojson, "松尾", "小丸川")
     catchment_area.derive_catchment_area()
-    catchment_area.derive_watershed()
+    catchment_area.derive_watershed_boundary()
     catchment_area.save_all_image_within_catchment_area()
     catchment_area.save_image()
     catchment_area.close_used_images()
@@ -263,7 +263,7 @@ class RiverMouth(FlowAccumulation):
         raise ValueError(f"{dam} Dam in {river} not found in geojson")
 
 
-class catchment_area(RiverMouth):
+class CatchmentArea(RiverMouth):
     def __init__(self):
         super().__init__()
         logging.info("init catchment_area")
@@ -336,36 +336,36 @@ class catchment_area(RiverMouth):
         self.close_image(self.catchment_area)
 
 
-class Watershed(catchment_area):
+class WatershedBoundary(CatchmentArea):
     def __init__(self):
         super().__init__()
-        logging.info("init Watershed")
-        self.watershed = None
+        logging.info("init WatershedBoundary")
+        self.watershed_boundary = None
 
-    def set_watershed(self, path):
-        self.watershed = self.open_image(path)
+    def set_watershed_boundary(self, path):
+        self.watershed_boundary = self.open_image(path)
 
     @logging_decorator
-    def derive_watershed(self):
-        logging.info("derive watershed")
+    def derive_watershed_boundary(self):
+        logging.info("derive watershed_boundary")
         if self.catchment_area_array is None:
             self.arrange_catchment_area_array()
-        watershed_array = self.get_watershed_array()
-        self.watershed = self.open_image_from_array(watershed_array)
-        print(len(watershed_array[watershed_array > 0]))
+        watershed_boundary_array = self.get_watershed_boundary_array()
+        self.watershed_boundary = self.open_image_from_array(watershed_boundary_array)
+        print(len(watershed_boundary_array[watershed_boundary_array > 0]))
 
-    def get_watershed_array(self) -> np.ndarray:
-        watershed_array = self.catchment_area_array.copy()
-        for y, x in np.ndindex(watershed_array.shape):
-            if watershed_array[y][x] == ValueSetting.nodata:
+    def get_watershed_boundary_array(self) -> np.ndarray:
+        watershed_boundary_array = self.catchment_area_array.copy()
+        for y, x in np.ndindex(watershed_boundary_array.shape):
+            if watershed_boundary_array[y][x] == ValueSetting.nodata:
                 continue
-            if self.is_not_watershed(self.catchment_area_array, x=x, y=y):
-                watershed_array[y][x] = ValueSetting.nodata
-        return watershed_array
+            if self.is_not_watershed_boundary(self.catchment_area_array, x=x, y=y):
+                watershed_boundary_array[y][x] = ValueSetting.nodata
+        return watershed_boundary_array
 
-    def is_not_watershed(self, watershed_array, x, y):
-        watershed_pixel_cnt = 0
-        array_shape = watershed_array.shape
+    def is_not_watershed_boundary(self, watershed_boundary_array, x, y):
+        watershed_boundary_pixel_cnt = 0
+        array_shape = watershed_boundary_array.shape
         for dx, dy in self.neighbor_delta_xy_generator(include_center=True):
             if dx * dy != 0:
                 continue
@@ -373,24 +373,24 @@ class Watershed(catchment_area):
             ny = y + dy
             if self.is_out_of_array(array_shape=array_shape, x=nx, y=ny):
                 continue
-            if watershed_array[ny][nx] == 1:
-                watershed_pixel_cnt += 1
-        if watershed_pixel_cnt >= 5:
+            if watershed_boundary_array[ny][nx] == 1:
+                watershed_boundary_pixel_cnt += 1
+        if watershed_boundary_pixel_cnt >= 5:
             return True
         else:
             return False
 
     def save_image(self):
         super().save_image()
-        self.save_tiff(self.watershed, "watershed")
-        self.save_mono_png(self.watershed, "watershed")
+        self.save_tiff(self.watershed_boundary, "watershed_boundary")
+        self.save_mono_png(self.watershed_boundary, "watershed_boundary")
 
     def close_used_images(self):
         super().close_used_images()
-        self.close_image(self.watershed)
+        self.close_image(self.watershed_boundary)
 
 
-class CatchmentAreaArrangement(Watershed):
+class CatchmentAreaArrangement(WatershedBoundary):
     def __init__(self):
         super().__init__()
         logging.info("init CatchmentAreaArrangement")
@@ -413,7 +413,7 @@ class CatchmentAreaArrangement(Watershed):
             "altitude_correction": self.altitude_correction,
             "flow_direction": self.flow_direction,
             "flow_accumulation": self.flow_accumulation,
-            "watershed": self.watershed,
+            "watershed_boundary": self.watershed_boundary,
         }
         for file_name, image in save_dict.items():
             if image is None:
@@ -421,9 +421,9 @@ class CatchmentAreaArrangement(Watershed):
             image = self.clip_by_catchment_area(image)
             image = self.crop_image(image, bound_box)
             file_name = "clipped_" + file_name
-            if file_name == "clipped_watershed":
+            if file_name == "clipped_watershed_boundary":
                 self.save_tiff_as_geojson(image, file_name)
-            if file_name in ["clipped_catchment_area", "clipped_watershed"]:
+            if file_name in ["clipped_catchment_area", "clipped_watershed_boundary"]:
                 self.save_mono_png(image, file_name)
             if file_name in ["clipped_flow_accumulation"]:
                 self.save_png(image, file_name)

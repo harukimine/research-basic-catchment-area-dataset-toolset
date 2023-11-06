@@ -10,7 +10,7 @@
   - D16
 - flow accumulation
 - catchment area
-- watershed
+- watershed boundary
 - some evaluation func for catchment area
 
 ## Usage
@@ -53,6 +53,6 @@ python3 src/make_catchment_area.py
 
 ### arranged catchment area sample
 
-|catchment area|watershed|
+|catchment area|watershed boundary|
 |---|---|
 |![catchment area](https://github.com/harukimine/readme-image-source/blob/main/research-basic-catchment-area-dataset-toolset/catchment-area.png?raw=true)|![watershed](https://github.com/harukimine/readme-image-source/blob/main/research-basic-catchment-area-dataset-toolset/watershed.png?raw=true)|
