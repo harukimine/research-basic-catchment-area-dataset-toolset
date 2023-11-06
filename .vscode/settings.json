@@ -1,23 +1,23 @@
 {
     "git.autofetch": true,
     "git.confirmSync": false,
-    // python
-    "python.linting.mypyEnabled": false,
-    "python.linting.enabled": true,
-    "python.linting.lintOnSave": true,
-    "python.linting.flake8Enabled": true,
-    "python.linting.flake8Args": [
-        "--max-line-length=150",
-        "--ignore=E402,E501,E203,W503,W504,F841,F541,E302,E266,F841,E123",
-    ],
-    "python.formatting.provider": "none",
     "files.exclude": {
         "**/.git": false
     },
     "[python]": {
-        "editor.formatOnType": true,
-        "editor.defaultFormatter": "ms-python.black-formatter"
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.formatOnSave": true
     },
+    "black-formatter.args": [
+        "--line-length=120"
+    ],
+    "[flake8]": {
+        "editor.defaultFormatter": "ms-python.python",
+        "editor.formatOnSave": true
+    },
+    "flake8.args": [
+        "--max-line-length=120"
+    ],
     "editor.inlineSuggest.enabled": true,
     "editor.formatOnSave": true,
 }
