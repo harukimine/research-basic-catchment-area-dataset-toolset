@@ -20,6 +20,9 @@
         "vmax",
         // sys
         "setrecursionlimit",
+        // environment
+        "venv",
+        ".venv",
         // Personal Names
         "Planchon",
         "planchon",
@@ -27,6 +30,8 @@
         "darboux",
         "Yamazaki",
         "yamazaki",
+        // other
+        "toolset"
     ],
     "useGitignore": true,
     "ignorePaths": [
