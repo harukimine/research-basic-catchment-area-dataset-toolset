@@ -94,39 +94,33 @@ class FlowDirection(PitFill):
         self.flow_direction = self.open_image_from_array(flow_direction_array)
 
     def get_flow_direction_array(self) -> np.ndarray:
-        array_size = self.get_array_size_from_image(self.pit_filled_dem)
-        flow_direction_array = np.zeros(array_size, dtype=np.int8)
+        array_shape = self.get_array_shape_from_image(self.pit_filled_dem)
+        flow_direction_array = np.zeros(array_shape, dtype=np.int8)
         pit_filled_array = np.array(self.dem)
-        for y, x in np.ndindex(array_size):
-            flow_direction_array[y][x] = self.get_flow_direction(
-                array=pit_filled_array, x=x, y=y
-            )
+        for y, x in np.ndindex(array_shape):
+            flow_direction_array[y][x] = self.get_flow_direction(array=pit_filled_array, x=x, y=y)
         return flow_direction_array
 
     def get_flow_direction(self, array, x, y) -> int:
         if self.flow_direction_algorithm == "steepest_descent":
             return self.get_steepest_descent_flow_direction(array, x, y)
 
-    def get_steepest_descent_flow_direction(
-        self, array: np.ndarray, x: int, y: int
-    ) -> int:
+    def get_steepest_descent_flow_direction(self, array: np.ndarray, x: int, y: int) -> int:
         dx, dy = self.get_steepest_downstream_dx_dy(array, x, y)
         flow_direction = self.get_flow_direction_from_delta_xy(dx=dx, dy=dy)
         if flow_direction == 0:
             logging.info(f"No flow direction at ({x=}, {y=})")
         return flow_direction
 
-    def get_steepest_downstream_dx_dy(
-        self, array: np.ndarray, x: int, y: int
-    ) -> tuple[int, int]:
-        array_size = array.shape
+    def get_steepest_downstream_dx_dy(self, array: np.ndarray, x: int, y: int) -> tuple[int, int]:
+        array_shape = array.shape
         lowest_dem = array[y][x]
         downstream_dx = x.copy()
         downstream_dy = y.copy()
         for dx, dy in self.neighbor_delta_xy_generator():
             nx = x + dx
             ny = y + dy
-            if self.is_out_of_array(array_size, nx, ny):
+            if self.is_out_of_array(array_shape, nx, ny):
                 continue
             neighbor_value = array[ny][nx]
             if lowest_dem < neighbor_value:
@@ -171,10 +165,10 @@ class FlowAccumulation(FlowDirection):
         self,
         flow_direction_array: np.array,
     ) -> np.array:
-        array_size = flow_direction_array.shape
-        flow_accumulation_array = np.zeros(array_size, dtype=np.uint32)
-        for y, x in np.ndindex(array_size):
-            searched_array = np.zeros(array_size, dtype=np.bool_)
+        array_shape = flow_direction_array.shape
+        flow_accumulation_array = np.zeros(array_shape, dtype=np.uint32)
+        for y, x in np.ndindex(array_shape):
+            searched_array = np.zeros(array_shape, dtype=np.bool_)
             while True:
                 flow_direction = flow_direction_array[y][x]
                 dx, dy = self.get_downstream_delta_xy(flow_direction)
@@ -187,10 +181,8 @@ class FlowAccumulation(FlowDirection):
         return flow_accumulation_array
 
     def meet_break_condition(self, searched_array, x, y):
-        size = searched_array.shape
-        return self.is_out_of_array(size, x, y) or searched_array[y][x]
-
-    # c
+        shape = searched_array.shape
+        return self.is_out_of_array(shape, x, y) or searched_array[y][x]
 
     def save_image(self):
         super().save_image()
@@ -261,9 +253,7 @@ class RiverMouth(FlowAccumulation):
         if self.flow_accumulation:
             print(f"{self.flow_accumulation.getpixel((x, y))=}")
 
-    def get_dam_coordinate_from_geojson(
-        self, geojson: dict[str, any], dam: str, river
-    ) -> list[float, float]:
+    def get_dam_coordinate_from_geojson(self, geojson: dict[str, any], dam: str, river) -> list[float, float]:
         features = geojson["features"]
         for feature in features:
             dam_name = feature["properties"]["W01_001"]
@@ -286,32 +276,20 @@ class catchment_area(RiverMouth):
             self.arrange_catchment_area_array()
         print(len(self.catchment_area_array[self.catchment_area_array > 0]))
         self.catchment_area = self.open_image_from_array(self.catchment_area_array)
-        tmp = self.catchment_area_array
-        flow_acc = np.array(self.flow_accumulation)
-        flow_acc[tmp == 0] = 0
-        flow_acc[flow_acc > 0] = 1
-        flow_dir = np.array(self.flow_direction)
-        array_size = flow_dir.shape
-        tmp_iamge = self.open_image_from_array(flow_acc)
-        self.save_mono_png(tmp_iamge, "tmp")
 
     def arrange_catchment_area_array(self):
         if self.flow_direction is None:
             self.derive_flow_direction()
-        array_size = self.get_array_size_from_image(self.flow_direction)
-        self.catchment_area_array = np.full(
-            array_size, ValueSetting.nodata, dtype=np.int8
-        )
+        array_shape = self.get_array_shape_from_image(self.flow_direction)
+        self.catchment_area_array = np.full(array_shape, ValueSetting.nodata, dtype=np.int8)
         x = self.river_mouth[0]
         y = self.river_mouth[1]
         self.catchment_area_array[y][x] = 1
         flow_direction_array = np.array(self.flow_direction)
-        self.identify_catchment_area_array_recursively(
-            flow_direction_array=flow_direction_array, x=x, y=y
-        )
+        self.identify_catchment_area_array_recursively(flow_direction_array=flow_direction_array, x=x, y=y)
 
     def identify_catchment_area_array_recursively(self, flow_direction_array, x, y):
-        array_size = flow_direction_array.shape
+        array_shape = flow_direction_array.shape
         while True:
             self.catchment_area_array[y][x] = 1
             is_upend_stream = True
@@ -320,7 +298,7 @@ class catchment_area(RiverMouth):
             for dx, dy in self.neighbor_delta_xy_generator():
                 nx = x + dx
                 ny = y + dy
-                if self.is_out_of_array(array_size=array_size, x=nx, y=ny):
+                if self.is_out_of_array(array_shape=array_shape, x=nx, y=ny):
                     continue
                 neighbor_flow_direction = flow_direction_array[ny][nx]
                 if self.is_upstream(
@@ -387,13 +365,13 @@ class Watershed(catchment_area):
 
     def is_not_watershed(self, watershed_array, x, y):
         watershed_pixel_cnt = 0
-        array_size = watershed_array.shape
+        array_shape = watershed_array.shape
         for dx, dy in self.neighbor_delta_xy_generator(include_center=True):
             if dx * dy != 0:
                 continue
             nx = x + dx
             ny = y + dy
-            if self.is_out_of_array(array_size=array_size, x=nx, y=ny):
+            if self.is_out_of_array(array_shape=array_shape, x=nx, y=ny):
                 continue
             if watershed_array[ny][nx] == 1:
                 watershed_pixel_cnt += 1

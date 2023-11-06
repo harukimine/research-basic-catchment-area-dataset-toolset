@@ -1,0 +1,69 @@
+{
+    "version": "0.2",
+    "$schema": "https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json",
+    "words": [
+        // numpy
+        "numpy",
+        "ndindex",
+        "ndarray",
+        //pandas
+        "pandas",
+        // pillow
+        "fromarray",
+        "tiffinfo",
+        "getpixel",
+        "putpixel",
+        "ModelTiepointTag",
+        // matplotlib
+        "cmap",
+        "vmin",
+        "vmax",
+        // sys
+        "setrecursionlimit",
+        // Personal Names
+        "Planchon",
+        "planchon",
+        "Darboux",
+        "darboux",
+        "Yamazaki",
+        "yamazaki",
+    ],
+    "useGitignore": true,
+    "ignorePaths": [
+        ".git/*",
+        ".vscode",
+        ".gitignore",
+        "cspell.json",
+        "requirements.txt",
+    ],
+    "patterns": [
+        {
+            "name": "Email",
+            "pattern": "/<?\\b[\\w.\\-+]{1,64}@\\w{1,63}(\\.\\w{1,63}){1,3}\\b>?/gi"
+        }
+    ],
+    "overrides": [
+        {
+            "filename": "*.har",
+            "languageId": "json",
+            "dictionaries": [
+                "http",
+                "node",
+                "typescript",
+                "python"
+            ],
+            "words": [
+                "etag",
+                "maxage",
+                "ratelimit",
+                "nosniff"
+            ]
+        }
+    ],
+    "enableFiletypes": [
+        "shellscript"
+    ],
+    "flagWords": [
+        "hte"
+    ]
+}

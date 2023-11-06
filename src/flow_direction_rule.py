@@ -1,5 +1,9 @@
 class FlowDirectionRuleMatrix:
-    D8 = [[32, 64, 128], [16, 0, 1], [8, 4, 2]]
+    D8 = [
+        [32, 64, 128],
+        [16, 0, 1],
+        [8, 4, 2],
+    ]
     D16 = [
         [None, 16, None, 9, None],
         [15, 8, 1, 2, 10],
@@ -66,8 +70,8 @@ class FlowDirectionRule(FlowDirectionRuleMatrix):
         else:
             return False
 
-    def is_out_of_array(self, array_size: tuple[int, int], x: int, y: int) -> bool:
-        if (0 <= y < array_size[0]) and (0 <= x < array_size[1]):
+    def is_out_of_array(self, array_shape: tuple[int, int], x: int, y: int) -> bool:
+        if (0 <= y < array_shape[0]) and (0 <= x < array_shape[1]):
             return False
         else:
             return True

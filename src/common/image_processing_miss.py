@@ -16,9 +16,7 @@ class CommonImageProcessing:
     def set_tag(self, tag):
         self.image_tag = tag
 
-    def set_coordinate_info(
-        self, geo_transform: tuple[float, float, float, float, float, float]
-    ):
+    def set_coordinate_info(self, geo_transform: tuple[float, float, float, float, float, float]):
         self.geo_transform = geo_transform
 
 
@@ -36,7 +34,7 @@ class PILProcessing(CommonImageProcessing):
         image.tag = self.image_tag
         return image
 
-    def get_array_size_from_image(self, image: Image) -> tuple[int, int]:
+    def get_array_shape_from_image(self, image: Image) -> tuple[int, int]:
         return image.height, image.width
 
     def save_tiff(self, image: Image.Image, file_name: str, **kwargs):
@@ -82,9 +80,7 @@ class PILProcessing(CommonImageProcessing):
                     new_image.putpixel((x, y), 1)
         return new_image
 
-    def crop_image(
-        self, image: Image.Image, bound_box: tuple[int, int, int, int]
-    ) -> Image.Image:
+    def crop_image(self, image: Image.Image, bound_box: tuple[int, int, int, int]) -> Image.Image:
         new_image = image.crop(*bound_box)
         new_tag = image.tag.copy()
         dx = bound_box[0] * new_tag["XResolution"] / new_tag["ResolutionUnit"]
@@ -110,7 +106,7 @@ class GdalProcessing(CommonImageProcessing):
         image: gdal.Dataset = gdal.Open(array)
         return image.SetGeoTransform(self.geo_transform)
 
-    def get_array_size_from_image(self, image: gdal.Dataset) -> tuple[int, int]:
+    def get_array_shape_from_image(self, image: gdal.Dataset) -> tuple[int, int]:
         return image.RasterYSize, image.RasterXSize
 
     def save_tiff(self, image: gdal.Dataset, file_name: str, **kwargs):
@@ -148,9 +144,7 @@ class GdalProcessing(CommonImageProcessing):
         new_image[new_image != 0] = 1
         return new_image
 
-    def crop_image(
-        self, image: gdal.Dataset, bound_box: tuple[int, int, int, int]
-    ) -> gdal:
+    def crop_image(self, image: gdal.Dataset, bound_box: tuple[int, int, int, int]) -> gdal:
         """
         bound_box = (left, upper, right, lower)
         GetGeoTransform():
@@ -191,11 +185,11 @@ class ImageProcessing(PILProcessing, GdalProcessing):
         elif self.used_image_module == "gdal":
             return GdalProcessing.open_image_from_array(array)
 
-    def get_array_size_from_image(self, image: bytes) -> tuple[int, int]:
+    def get_array_shape_from_image(self, image: bytes) -> tuple[int, int]:
         if self.used_image_module == "PIL":
-            return PILProcessing.get_array_size_from_image(image)
+            return PILProcessing.get_array_shape_from_image(image)
         elif self.used_image_module == "gdal":
-            return GdalProcessing.get_array_size_from_image(image)
+            return GdalProcessing.get_array_shape_from_image(image)
 
     def save_tiff(self, image: bytes, file_name: str, **kwargs):
         if self.used_image_module == "PIL":

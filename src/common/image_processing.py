@@ -34,16 +34,12 @@ class CommonImageProcessing:
     def get_y_origin(self, tag):
         return tag[TiffTag.ModelTiepointTag][4]
 
-    def change_resolution_to_km(
-        self, resolution: tuple[float, float, float]
-    ) -> tuple[float, float, float]:
+    def change_resolution_to_km(self, resolution: tuple[float, float, float]) -> tuple[float, float, float]:
         crs_info = self.image_tag[TiffTag.GeoAsciiParamsTag][0]
         if "JGD_2011" in crs_info or "JGD2011" in crs_info:
             pass
 
-    def set_coordinate_info(
-        self, geo_transform: tuple[float, float, float, float, float, float]
-    ):
+    def set_coordinate_info(self, geo_transform: tuple[float, float, float, float, float, float]):
         self.geo_transform = geo_transform
 
     def is_out_of_array(self, array_size: tuple[int, int], x: int, y: int) -> bool:
@@ -67,7 +63,7 @@ class PILProcessing(CommonImageProcessing):
         image.tag = self.image_tag
         return image
 
-    def get_array_size_from_image(self, image: Image) -> tuple[int, int]:
+    def get_array_shape_from_image(self, image: Image) -> tuple[int, int]:
         return image.height, image.width
 
     def save_tiff(self, image: Image.Image, file_name: str, **kwargs):
@@ -116,9 +112,7 @@ class PILProcessing(CommonImageProcessing):
                     new_image.putpixel((x, y), 1)
         return new_image
 
-    def crop_image(
-        self, image: Image.Image, bound_box: tuple[int, int, int, int]
-    ) -> Image.Image:
+    def crop_image(self, image: Image.Image, bound_box: tuple[int, int, int, int]) -> Image.Image:
         """
         bound_box: (left, upper, right, lower)
         """
@@ -208,7 +202,6 @@ class GeoJsonProcessing(CommonImageProcessing):
         }
 
     def get_crs_from_tiff(self) -> str:
-        """('GCS Name = GCS_JGD_2011|Datum = D_JGD_2011|Ellipsoid = GRS_1980|Primem = Greenwich||ESRI PE String = GEOGCS["GCS_JGD_2011",DATUM["D_JGD_2011",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]]|',)"""
         crs_info = self.saved_tiff.tag[TiffTag.GeoAsciiParamsTag][0]
         if crs_info is None:
             return None
@@ -254,9 +247,7 @@ class GeoJsonProcessing(CommonImageProcessing):
             x, y = nx, ny
         return coordinates
 
-    def get_neighbor_xy_pixel(
-        self, array: np.array, searched_array: np.array, x: int, y: int
-    ) -> tuple[int, int]:
+    def get_neighbor_xy_pixel(self, array: np.array, searched_array: np.array, x: int, y: int) -> tuple[int, int]:
         """Closest distance and few neighboring pixels"""
         neighbor_pixel_cnt_min = 9
         dist_min = 2

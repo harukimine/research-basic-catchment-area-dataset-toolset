@@ -28,9 +28,7 @@ class NormalPitFill:
             if depression == 0:
                 break
 
-    def _search_lowest_neighbor_dem(
-        self, dem_array: np.ndarray, x: int, y: int
-    ) -> bool:
+    def _search_lowest_neighbor_dem(self, dem_array: np.ndarray, x: int, y: int) -> bool:
         y_size, x_size = dem_array.shape
         dem = dem_array[y][x]
         min_dem = float("inf")
